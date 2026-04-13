@@ -241,7 +241,7 @@ export class BrainDB {
   }
 
   listPages(filter?: { type?: string; tag?: string; limit?: number; offset?: number }): Page[] {
-    let sql = 'SELECT id, slug, type, title, compiled_truth, timeline, frontmatter, created_at, updated_at FROM pages';
+    let sql = 'SELECT pages.id, pages.slug, pages.type, pages.title, pages.compiled_truth, pages.timeline, pages.frontmatter, pages.created_at, pages.updated_at FROM pages';
     const params: unknown[] = [];
 
     if (filter?.type || filter?.tag) {
