@@ -1,0 +1,25 @@
+{
+  "name": "gbrain",
+  "version": "0.1.0",
+  "description": "A CLI tool built with Bun and TypeScript",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run src/cli.ts",
+    "build": "echo 'No build step needed - using Bun runtime'"
+  },
+  "bin": {
+    "gbrain": "./bin/gbrain"
+  },
+  "dependencies": {
+    "gray-matter": "^4.0.3",
+    "yaml": "^2.4.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
