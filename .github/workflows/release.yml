@@ -1,0 +1,88 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-binaries:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "latest"
+
+      - run: bun install --frozen-lockfile
+
+      - name: Build binary
+        run: bun run build
+
+      - name: Smoke test (unix)
+        if: runner.os != 'Windows'
+        run: ./dist/gbrain version
+
+      - name: Smoke test (windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./dist/gbrain.exe version
+
+      - name: Rename artifact (unix)
+        if: runner.os != 'Windows'
+        run: |
+          mkdir -p dist-artifacts
+          mv dist/gbrain "dist-artifacts/gbrain-${{ runner.os }}-${{ runner.arch }}"
+
+      - name: Rename artifact (windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist-artifacts | Out-Null
+          Move-Item -Force dist/gbrain.exe ("dist-artifacts/gbrain-" + $env:RUNNER_OS + "-" + $env:RUNNER_ARCH + ".exe")
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gbrain-${{ runner.os }}-${{ runner.arch }}
+          path: dist-artifacts/*
+
+  github-release:
+    needs: build-binaries
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist-artifacts
+
+      - name: List artifacts
+        run: ls -R dist-artifacts
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist-artifacts/**/*
+
+  npm-publish:
+    needs: build-binaries
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "latest"
+
+      - run: bun install --frozen-lockfile
+
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish

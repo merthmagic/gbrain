@@ -1,15 +1,25 @@
 {
   "name": "gbrain",
   "version": "0.1.0",
-  "description": "A CLI tool built with Bun and TypeScript",
+  "description": "A local-first knowledge base CLI built with Bun, TypeScript, and SQLite",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "bun run src/cli.ts",
-    "build": "echo 'No build step needed - using Bun runtime'"
+    "build": "bun build --compile --outfile dist/gbrain src/cli.ts"
   },
   "bin": {
     "gbrain": "./bin/gbrain"
   },
+  "files": [
+    "bin/",
+    "src/",
+    "skills/",
+    "examples/",
+    "README.md",
+    "LICENSE",
+    "package.json"
+  ],
   "dependencies": {
     "gray-matter": "^4.0.3",
     "yaml": "^2.4.0"
@@ -21,5 +31,8 @@
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

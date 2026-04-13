@@ -16,7 +16,7 @@
 bun install
 ```
 
-开发模式运行（推荐）：
+开发模式运行（推荐，适合在仓库内开发/调试）：
 
 ```bash
 bun run dev <command> [args...] [--flags]
@@ -27,6 +27,108 @@ bun run dev <command> [args...] [--flags]
 ```bash
 bun run src/cli.ts <command> [args...] [--flags]
 ```
+
+## 安装到系统中使用
+
+有两种方式：
+
+### 方式 A：用 `bun link` 做本地全局安装（依赖 Bun 运行时，推荐）
+
+适合：你希望在任意目录直接运行 `gbrain`，但可以接受机器上安装了 Bun。
+
+```bash
+cd /path/to/gbrain
+bun install
+bun link
+
+gbrain version
+```
+
+如果提示找不到 `gbrain`，检查 `~/.bun/bin` 是否在 `PATH` 里：
+
+```bash
+echo $PATH | tr ':' '\n' | grep -n "\.bun/bin" || true
+```
+
+卸载（取消注册）：
+
+```bash
+cd /path/to/gbrain
+bun unlink
+```
+
+### 方式 A2：`npm link`（兜底）
+
+如果你不想用 Bun 的 link，也可以用 npm：
+
+```bash
+cd /path/to/gbrain
+bun install
+npm link
+gbrain version
+```
+
+### 方式 B：编译成单文件可执行（不依赖 Bun）
+
+适合：你希望拷贝一个二进制到任意机器/容器里运行。
+
+```bash
+cd /path/to/gbrain
+bun install
+bun run build
+
+./dist/gbrain version
+```
+
+然后把 `dist/gbrain` 放到 PATH（macOS 常见路径是 `/usr/local/bin` 或 `/opt/homebrew/bin`）。
+
+## 发布给其他用户使用
+
+### 方案 1：发布到 npm（用户机器需要安装 Bun）
+
+这是最简单的分发方式：用户只需要 `npm i -g gbrain`（或 `bun add -g gbrain`，视 Bun 版本能力而定），然后直接运行 `gbrain`。
+
+发布者（你）需要做：
+
+1) 补齐 `package.json` 里的发布元信息（建议）：
+- `repository`
+- `homepage`
+- `bugs`
+
+2) 登录 npm 并发布：
+
+```bash
+npm login
+npm publish
+```
+
+用户安装：
+
+```bash
+npm i -g gbrain
+gbrain version
+```
+
+### 方案 2：GitHub Release 预编译二进制（用户无需安装 Bun）
+
+仓库已提供一个基于 tag 的 Release workflow：推送 `v*` tag 后会自动构建 macOS/Linux/Windows 的二进制并上传到 GitHub Release。
+Workflow 内包含一次 `gbrain version` 的冒烟测试，用于确保产物能正常启动。
+
+1) 在 GitHub 仓库设置 Secrets：
+- `NPM_TOKEN`（如果你也想自动 npm publish）
+
+2) 打 tag 并推送：
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+用户下载对应平台的 `gbrain-*` 文件，放入 PATH 即可运行。
+
+## Known Issues
+
+- `bun build --compile` 生成的二进制在部分受限环境（沙箱/安全策略）中可能会被系统直接 kill（表现为 `zsh: killed`）。这种情况下建议使用 `bun link` / `npm i -g` 的方式分发（依赖 Bun 运行时），或在 CI/真实机器上验证二进制后再发布 Release。
 
 ## 数据库与全局参数
 
