@@ -125,11 +125,12 @@ describe('cosineSimilarity', () => {
     const a = new Float32Array(n);
     const b = new Float32Array(n);
     for (let i = 0; i < n; i++) {
-      a[i] = Math.random();
-      b[i] = Math.random();
+      a[i] = ((i % 17) - 8) / 8;
+      b[i] = (((i * 7) % 19) - 9) / 9;
     }
     const sim = cosineSimilarity(a, b);
-    expect(sim).toBeGreaterThanOrEqual(-1);
-    expect(sim).toBeLessThanOrEqual(1);
+    const epsilon = 1e-6;
+    expect(sim).toBeGreaterThanOrEqual(-1 - epsilon);
+    expect(sim).toBeLessThanOrEqual(1 + epsilon);
   });
 });

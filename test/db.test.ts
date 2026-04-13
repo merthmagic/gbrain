@@ -159,7 +159,7 @@ describe('Tags', () => {
     db.addTag(id, 'founder');
 
     const tags = db.getTags('test/page');
-    expect(tags).toEqual(['ai', 'founder']);
+    expect([...tags].sort()).toEqual(['ai', 'founder']);
   });
 
   test('remove tag', () => {

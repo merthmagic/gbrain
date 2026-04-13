@@ -109,8 +109,6 @@ describe('get command', () => {
     const cap = captureConsole();
     try {
       expect(() => get([], {}, db)).toThrow('process.exit(1)');
-    } catch {
-      // Expected
     } finally {
       cap.restore();
     }
@@ -123,8 +121,6 @@ describe('get command', () => {
     const cap = captureConsole();
     try {
       expect(() => get(['does/not/exist'], {}, db)).toThrow('process.exit(1)');
-    } catch {
-      // Expected
     } finally {
       cap.restore();
     }
@@ -209,8 +205,6 @@ Updated content.
     const cap = captureConsole();
     try {
       await expect(put([], {}, db)).rejects.toThrow('process.exit(1)');
-    } catch {
-      // Expected
     } finally {
       cap.restore();
     }
@@ -225,8 +219,6 @@ Updated content.
     const cap = captureConsole();
     try {
       await expect(put(['notes/empty'], {}, db)).rejects.toThrow('process.exit(1)');
-    } catch {
-      // Expected
     } finally {
       cap.restore();
     }
@@ -246,8 +238,6 @@ Some content.
     const cap = captureConsole();
     try {
       await expect(put(['notes/no-type'], {}, db)).rejects.toThrow('process.exit(1)');
-    } catch {
-      // Expected
     } finally {
       cap.restore();
     }
@@ -267,8 +257,6 @@ Some content.
     const cap = captureConsole();
     try {
       await expect(put(['notes/no-title'], {}, db)).rejects.toThrow('process.exit(1)');
-    } catch {
-      // Expected
     } finally {
       cap.restore();
     }

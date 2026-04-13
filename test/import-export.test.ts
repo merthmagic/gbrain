@@ -1,8 +1,8 @@
 import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import { BrainDB } from '../src/core/db';
-import { renderPage } from '../src/core/markdown';
 import importCmd from '../src/commands/import';
 import exportCmd from '../src/commands/export';
 
@@ -45,7 +45,7 @@ describe('Import', () => {
 
   beforeEach(() => {
     db = new BrainDB(':memory:');
-    tmpDir = fs.mkdtempSync('gbrain-test-import-');
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gbrain-test-import-'));
     cap = captureConsole();
   });
 
@@ -236,7 +236,7 @@ Content.
   });
 
   test('imports real examples/minimal-notes dataset', async () => {
-    const examplesDir = path.resolve(__dirname, '..', 'examples', 'minimal-notes');
+    const examplesDir = path.resolve(import.meta.dir, '..', 'examples', 'minimal-notes');
     if (!fs.existsSync(examplesDir)) return;
 
     await importCmd([examplesDir], {}, db);
@@ -262,7 +262,7 @@ describe('Export', () => {
 
   beforeEach(() => {
     db = new BrainDB(':memory:');
-    tmpDir = fs.mkdtempSync('gbrain-test-export-');
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gbrain-test-export-'));
     cap = captureConsole();
   });
 
@@ -333,8 +333,8 @@ describe('Import → Export Round-Trip', () => {
 
   beforeEach(() => {
     db = new BrainDB(':memory:');
-    importDir = fs.mkdtempSync('gbrain-test-rt-import-');
-    exportDir = fs.mkdtempSync('gbrain-test-rt-export-');
+    importDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gbrain-test-rt-import-'));
+    exportDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gbrain-test-rt-export-'));
     cap = captureConsole();
   });
 
@@ -502,7 +502,7 @@ Content.
   });
 
   test('real examples/minimal-notes round-trip', async () => {
-    const examplesDir = path.resolve(__dirname, '..', 'examples', 'minimal-notes');
+    const examplesDir = path.resolve(import.meta.dir, '..', 'examples', 'minimal-notes');
     if (!fs.existsSync(examplesDir)) return;
 
     // Import original
