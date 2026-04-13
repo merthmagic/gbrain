@@ -9,7 +9,7 @@ export function searchFTS(db: Database, query: string, options?: {
   let sql = `
     SELECT p.id as page_id, p.slug, p.title, p.type,
            rank as score,
-           snippet(page_fts, 2, '>>>', '<<<') as snippet
+           p.compiled_truth as snippet
     FROM page_fts f
     JOIN pages p ON p.id = f.rowid
     WHERE page_fts MATCH ?

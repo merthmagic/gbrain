@@ -95,7 +95,7 @@ export default async function importCmd(args: string[], flags: Record<string, st
       }
       
       // Store raw data for export
-      db.setRawData(slug, content);
+      db.setRawData(pageId, filePath, content);
       
       // Log ingest
       db.addIngestLog({ source_type: 'import', source_ref: filePath, pages_updated: [slug] });

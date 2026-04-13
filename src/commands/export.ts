@@ -36,6 +36,8 @@ export default async function exportCmd(args: string[], flags: Record<string, st
       } else {
         // Render from database
         content = renderPage(page);
+        // Store as raw data so import will work
+        db.setRawData(page.id, 'export', content);
       }
 
       // Convert slug to file path
