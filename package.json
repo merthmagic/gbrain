@@ -3,6 +3,14 @@
   "version": "0.1.0",
   "description": "A local-first knowledge base CLI built with Bun, TypeScript, and SQLite",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/merthmagic/gbrain.git"
+  },
+  "homepage": "https://github.com/merthmagic/gbrain#readme",
+  "bugs": {
+    "url": "https://github.com/merthmagic/gbrain/issues"
+  },
   "type": "module",
   "scripts": {
     "dev": "bun run src/cli.ts",
