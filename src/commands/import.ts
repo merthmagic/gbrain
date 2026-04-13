@@ -1,6 +1,6 @@
 import { BrainDB } from '../core/db.js';
 import { parseMarkdown } from '../core/markdown.js';
-import { extractLinks, resolveSlug } from '../core/links.js';
+import { extractLinks } from '../core/links.js';
 import type { PageType } from '../core/types.js';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -44,6 +44,7 @@ export default async function importCmd(args: string[], flags: Record<string, st
 
   let successCount = 0;
   let errorCount = 0;
+  const pendingLinks: Array<{ fromSlug: string; toSlug: string; context: string }> = [];
 
   for (const filePath of markdownFiles) {
     try {
@@ -75,15 +76,10 @@ export default async function importCmd(args: string[], flags: Record<string, st
         frontmatter: parsed.frontmatter,
       });
       
-      // Extract and create links
+      // Extract links (create after all pages are imported)
       const links = extractLinks(content);
       for (const link of links) {
-        try {
-          db.addLink(slug, link.targetSlug, link.context);
-        } catch (error) {
-          // Link target may not exist yet
-          console.warn(`  Warning: Could not create link to ${link.targetSlug}`);
-        }
+        pendingLinks.push({ fromSlug: slug, toSlug: link.targetSlug, context: link.context });
       }
       
       // Extract and add tags
@@ -110,13 +106,30 @@ export default async function importCmd(args: string[], flags: Record<string, st
     }
   }
 
+  let linksCreated = 0;
+  let linksSkipped = 0;
+  for (const link of pendingLinks) {
+    try {
+      db.addLink(link.fromSlug, link.toSlug, link.context);
+      linksCreated++;
+    } catch {
+      linksSkipped++;
+      if (!flags.json) {
+        console.warn(`  Warning: Could not create link ${link.fromSlug} -> ${link.toSlug}`);
+      }
+    }
+  }
+
   if (flags.json) {
     console.log(JSON.stringify({
       total: markdownFiles.length,
       success: successCount,
       errors: errorCount,
+      links_created: linksCreated,
+      links_skipped: linksSkipped,
     }, null, 2));
   } else {
     console.log(`\nImport complete: ${successCount} successful, ${errorCount} errors`);
+    console.log(`Links: ${linksCreated} created, ${linksSkipped} skipped`);
   }
 }

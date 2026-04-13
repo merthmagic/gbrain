@@ -1,0 +1,16 @@
+Minimal Demo Dataset
+
+This dataset contains 4 markdown pages:
+- people/alice.md
+- companies/acme-ai.md
+- projects/ops-copilot.md
+- concepts/rag.md
+
+Quick start:
+
+  bun run dev init ./demo.db
+  bun run dev import ./examples/minimal-notes --db ./demo.db
+  bun run dev stats --db ./demo.db
+
+Notes:
+- Import 会先导入所有页面，再统一建立链接，所以不依赖文件遍历顺序。
