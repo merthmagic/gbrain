@@ -64,7 +64,8 @@ CREATE TABLE IF NOT EXISTS page_embeddings (
   chunk_text  TEXT    NOT NULL,
   embedding   BLOB    NOT NULL,
   model       TEXT    NOT NULL DEFAULT 'text-embedding-3-small',
-  created_at  TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+  created_at  TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
+  UNIQUE(page_id, chunk_index)
 );
 
 CREATE INDEX IF NOT EXISTS idx_embeddings_page ON page_embeddings(page_id);
