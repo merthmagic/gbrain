@@ -190,7 +190,7 @@ export class MCPServer {
   }
 
   private registerResources(): MCPResource[] {
-    const pages = this.db.listPages({});
+    const pages = this.db.listPageSummaries({});
     return pages.map(page => ({
       uri: `gbrain://pages/${page.slug}`,
       name: page.title,
@@ -334,7 +334,7 @@ export class MCPServer {
         const tag = args.tag as string | undefined;
         const limit = args.limit as number | undefined;
         const offset = args.offset as number | undefined;
-        const pages = this.db.listPages({ type, tag, limit, offset });
+        const pages = this.db.listPageSummaries({ type, tag, limit, offset });
         return {
           content: [{ type: 'text', text: JSON.stringify(pages, null, 2) }],
         };
@@ -407,15 +407,25 @@ export class MCPServer {
     }
   }
 
-  private async handleResourceRead(params: unknown): Promise<{ uri: string; mimeType: string; text: string }> {
+  private async handleResourceRead(params: unknown): Promise<{ contents: Array<{ uri: string; mimeType: string; text: string }> }> {
     const p = params as { uri: string };
     const uri = p.uri;
 
-    if (!uri.startsWith('gbrain://pages/')) {
-      throw new Error(`Invalid URI: ${uri}`);
+    // Extract slug from URI: support both "gbrain://pages/slug" and bare "slug"
+    let slug: string;
+    if (uri.startsWith('gbrain://pages/')) {
+      slug = uri.replace('gbrain://pages/', '');
+    } else if (uri.startsWith('gbrain://')) {
+      slug = uri.replace('gbrain://', '');
+    } else {
+      slug = uri;
     }
 
-    const slug = uri.replace('gbrain://pages/', '');
+    // Directory-like URIs return empty contents
+    if (!slug || slug === '/' || slug === 'pages') {
+      return { contents: [] };
+    }
+
     const page = this.db.getPage(slug);
 
     if (!page) {
@@ -432,9 +442,11 @@ export class MCPServer {
     }
 
     return {
-      uri,
-      mimeType: 'text/markdown',
-      text: content,
+      contents: [{
+        uri,
+        mimeType: 'text/markdown',
+        text: content,
+      }],
     };
   }
 
@@ -505,25 +517,51 @@ export class MCPServer {
   }
 
   async start(): Promise<void> {
+    const decoder = new TextDecoder();
     const stdin = Bun.stdin.stream();
     const reader = stdin.getReader();
+    let buffer = '';
 
     try {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
-        const line = new TextDecoder().decode(value).trim();
-        if (!line) continue;
+        buffer += decoder.decode(value, { stream: true });
+        while (buffer.includes('\n')) {
+          const idx = buffer.indexOf('\n');
+          const line = buffer.substring(0, idx);
+          buffer = buffer.substring(idx + 1);
 
-        const request = JSON.parse(line) as MCPRequest;
-        const response = await this.handleRequest(request);
+          const trimmed = line.trim();
+          if (!trimmed) continue;
 
-        const responseText = JSON.stringify(response) + '\n';
-        await Bun.write(Bun.stdout, responseText);
+          try {
+            const parsed = JSON.parse(trimmed) as Record<string, unknown>;
+
+            // Notifications (no id) must not receive a response
+            if (!('id' in parsed) || parsed.id === undefined) {
+              continue;
+            }
+
+            const request = parsed as MCPRequest;
+            const response = await this.handleRequest(request);
+            const responseText = JSON.stringify(response) + '\n';
+            await Bun.write(Bun.stdout, responseText);
+          } catch (error) {
+            const errorResponse: MCPResponse = {
+              jsonrpc: '2.0',
+              id: 0,
+              error: {
+                code: -32603,
+                message: `Internal error: ${error}`,
+              },
+            };
+            await Bun.write(Bun.stdout, JSON.stringify(errorResponse) + '\n');
+          }
+        }
       }
     } finally {
-      reader.releaseLock();
       this.db.close();
     }
   }

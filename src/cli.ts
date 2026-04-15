@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 
+import * as path from 'path';
 import { BrainDB } from './core/db.js';
 
 // 全局参数解析
@@ -39,9 +40,10 @@ function parseArgs(args: string[]): { command: string; args: string[]; flags: Re
   return { command, args: commandArgs, flags };
 }
 
-// 获取数据库路径
+// 获取数据库路径（解析为绝对路径）
 function getDbPath(flags: Record<string, string>): string {
-  return flags.db || flags['db-path'] || process.env.GBRAIN_DB || './brain.db';
+  const raw = flags.db || flags['db-path'] || process.env.GBRAIN_DB || './brain.db';
+  return path.resolve(raw);
 }
 
 // 命令处理器类型
@@ -213,7 +215,10 @@ async function main() {
     console.error(error);
     process.exit(1);
   } finally {
-    db.close();
+    // serve command manages its own DB lifecycle
+    if (command !== 'serve') {
+      db.close();
+    }
   }
 }
 
