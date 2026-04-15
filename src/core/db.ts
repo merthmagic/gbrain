@@ -240,6 +240,39 @@ export class BrainDB {
     return result.changes > 0;
   }
 
+  listPageSummaries(filter?: { type?: string; tag?: string; limit?: number; offset?: number }): Array<{ id: number; slug: string; type: string; title: string; created_at: string; updated_at: string }> {
+    let sql = 'SELECT id, slug, type, title, created_at, updated_at FROM pages';
+    const params: unknown[] = [];
+
+    if (filter?.type || filter?.tag) {
+      const conditions: string[] = [];
+      if (filter.type) {
+        conditions.push('type = ?');
+        params.push(filter.type);
+      }
+      if (filter.tag) {
+        sql += ' JOIN tags ON pages.id = tags.page_id';
+        conditions.push('tags.tag = ?');
+        params.push(filter.tag);
+      }
+      sql += ' WHERE ' + conditions.join(' AND ');
+    }
+
+    sql += ' ORDER BY updated_at DESC';
+
+    if (filter?.limit) {
+      sql += ' LIMIT ?';
+      params.push(filter.limit);
+    }
+
+    if (filter?.offset) {
+      sql += ' OFFSET ?';
+      params.push(filter.offset);
+    }
+
+    return this.db.query(sql).all(...(params as any)) as Array<{ id: number; slug: string; type: string; title: string; created_at: string; updated_at: string }>;
+  }
+
   listPages(filter?: { type?: string; tag?: string; limit?: number; offset?: number }): Page[] {
     let sql = 'SELECT pages.id, pages.slug, pages.type, pages.title, pages.compiled_truth, pages.timeline, pages.frontmatter, pages.created_at, pages.updated_at FROM pages';
     const params: unknown[] = [];
